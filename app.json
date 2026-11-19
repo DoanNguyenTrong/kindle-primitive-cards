@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "primitive-cards",
+  "dir": "cards",
+  "name": "Primitive Cards",
+  "subtitle": "Review with spaced repetition",
+  "developer": { "name": "Primitive AI" },
+  "categories": ["productivity"],
+  "description": "Create decks, review text cards and import Anki decks.",
+  "repo": "https://github.com/DoanNguyenTrong/kindle-primitive-cards",
+  "licence": "PolyForm-Noncommercial-1.0.0",
+  "source": "hosted",
+  "icon": "icon.png",
+  "changes": { "network": false, "stops_kindle_ui": false, "starts_at_boot": false, "root_filesystem": false, "hooks": false },
+  "versions": []
+}

@@ -1,0 +1,12 @@
+[package]
+name = "cards-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.37", features = ["bundled"] }
+zip = { version = "2", default-features = false, features = ["deflate"] }
+zstd = "0.13"

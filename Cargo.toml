@@ -1,0 +1,18 @@
+[workspace]
+resolver = "2"
+members = ["crates/cards-core", "crates/cards-render", "crates/cards-kindle", "crates/cards-desktop"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "PolyForm-Noncommercial-1.0.0"
+
+[workspace.dependencies]
+cards-core = { path = "crates/cards-core" }
+cards-render = { path = "crates/cards-render" }
+primitive-app = { path = "../doannt-kindle-tools/crates/primitive-app" }
+primitive-ui = { path = "../doannt-kindle-tools/crates/primitive-ui" }
+
+[profile.release]
+lto = true
+codegen-units = 1
