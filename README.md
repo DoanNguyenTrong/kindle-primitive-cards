@@ -1,6 +1,6 @@
 <div align="center">
 
-# Primitive Cards
+# Cards
 
 **Text flashcards with spaced repetition for Kindle e-readers.**
 
@@ -36,7 +36,7 @@ text decks from Anki or export your own cards to Documents.
 ## Quick start
 
 Copy the `cards` and `documents` folders from the local ARMHF package to your Kindle over USB, then eject and open
-**Primitive Cards** from Primitive Launcher. The app uses the fonts installed by Launcher. [Install guide](INSTALL.md)
+**Cards** from Primitive Launcher. The app uses the fonts installed by Launcher. [Install guide](INSTALL.md)
 
 ## Status
 

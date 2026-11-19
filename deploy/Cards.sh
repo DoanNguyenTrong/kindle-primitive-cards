@@ -1,5 +1,5 @@
 #!/bin/sh
-# Name: Primitive Cards
+# Name: Cards
 # Author: Primitive AI
 # DontUseFBInk
 # PrimitiveUSBLease

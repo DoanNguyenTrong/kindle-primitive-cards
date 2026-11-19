@@ -2,7 +2,7 @@
   "schema": 1,
   "id": "primitive-cards",
   "dir": "cards",
-  "name": "Primitive Cards",
+  "name": "Cards",
   "subtitle": "Review with spaced repetition",
   "developer": { "name": "Primitive AI" },
   "categories": ["productivity"],
