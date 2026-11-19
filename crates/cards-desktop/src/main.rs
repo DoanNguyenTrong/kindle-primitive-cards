@@ -49,5 +49,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         HEIGHT,
         &frame(&app, &mut canvas, true),
     )?;
+
+    let front = (1..=12)
+        .map(|i| format!("Question line {i}."))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let back = (1..=12)
+        .map(|i| format!("Dòng đáp án {i}."))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let back = format!("{back}\n{}", "W".repeat(220));
+    let library = Library {
+        decks: vec![Deck {
+            name: "Long card".into(),
+            cards: vec![Card::new(front, back)],
+        }],
+    };
+    let mut app = View::new(library, None, output.clone());
+    app.input(Input::Tap(140.0, 280.0));
+    app.input(Input::Tap(400.0, 1000.0));
+    let first = frame(&app, &mut canvas, false);
+    assert_eq!(app.input(Input::PageForward), Change::Partial);
+    assert_ne!(first, frame(&app, &mut canvas, false));
+    assert_eq!(app.input(Input::PageForward), Change::None);
+    assert_eq!(app.input(Input::Tap(400.0, 1080.0)), Change::Full);
+    let first_answer = frame(&app, &mut canvas, false);
+    assert_eq!(app.input(Input::PageBack), Change::None);
+    assert_eq!(app.input(Input::Tap(1000.0, 1395.0)), Change::Partial);
+    let second_answer = frame(&app, &mut canvas, false);
+    assert_ne!(first_answer, second_answer);
+    assert_eq!(app.input(Input::PageForward), Change::Partial);
+    write_png(
+        &output.join("cards-answer-next-page.png"),
+        WIDTH,
+        HEIGHT,
+        &second_answer,
+    )?;
     Ok(())
 }

@@ -1,5 +1,7 @@
 use std::{
+    cell::RefCell,
     fs, io,
+    ops::Range,
     path::PathBuf,
     sync::mpsc,
     thread,
@@ -18,6 +20,13 @@ const NEW: Rect = Rect::new(40, 1460, 450, 100);
 const IMPORT: Rect = Rect::new(513, 1460, 710, 100);
 const MAIN_TEXT: Rect = Rect::new(40, 220, 1184, 650);
 const OPEN_CARD: Rect = Rect::new(40, 1040, 1184, 100);
+const PREVIOUS: Rect = Rect::new(40, 1350, 280, 100);
+const NEXT: Rect = Rect::new(944, 1350, 280, 100);
+const FACE_STYLE: TextStyle = TextStyle::new(57)
+    .bold()
+    .center()
+    .lines(8)
+    .break_long_words();
 type PendingImport = mpsc::Receiver<Result<Vec<Deck>, String>>;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -40,6 +49,7 @@ pub struct View {
     front: String,
     files: Vec<PathBuf>,
     page: usize,
+    review_pages: RefCell<Vec<Range<usize>>>,
     notice: String,
     importing: Option<PendingImport>,
     import_check: Option<Instant>,
@@ -64,6 +74,7 @@ impl View {
             front: String::new(),
             files: Vec::new(),
             page: 0,
+            review_pages: RefCell::new(Vec::new()),
             notice: String::new(),
             importing: None,
             import_check: None,
@@ -73,6 +84,7 @@ impl View {
     fn go(&mut self, mode: Mode) -> Change {
         self.mode = mode;
         self.page = 0;
+        self.review_pages.get_mut().clear();
         self.notice.clear();
         Change::Full
     }
@@ -100,17 +112,16 @@ impl View {
     }
 
     fn page(&mut self, delta: isize) -> Change {
-        let count = if self.mode == Mode::Import {
-            self.files.len()
-        } else if self.mode == Mode::Library {
-            self.library.decks.len()
-        } else {
-            return Change::None;
+        let pages = match self.mode {
+            Mode::Import => self.files.len().div_ceil(PAGE_SIZE),
+            Mode::Library => self.library.decks.len().div_ceil(PAGE_SIZE),
+            Mode::Review(..) => self.review_pages.get_mut().len(),
+            _ => return Change::None,
         };
         let next = self
             .page
             .saturating_add_signed(delta)
-            .min(count.div_ceil(PAGE_SIZE).saturating_sub(1));
+            .min(pages.saturating_sub(1));
         if self.page == next {
             return Change::None;
         }
@@ -180,11 +191,10 @@ impl View {
         Ok(())
     }
 
-    fn draw_pager(&self, canvas: &mut Canvas, count: usize) {
-        let pages = count.div_ceil(PAGE_SIZE);
+    fn draw_pager(&self, canvas: &mut Canvas, pages: usize) {
         if pages > 1 {
-            canvas.button(Rect::new(40, 1350, 280, 100), "Previous", false, false);
-            canvas.button(Rect::new(944, 1350, 280, 100), "Next", false, false);
+            canvas.button(PREVIOUS, "Previous", false, false);
+            canvas.button(NEXT, "Next", false, false);
             canvas.text(
                 Rect::new(339, 1377, 584, 60),
                 &format!("Page {} of {pages}", self.page + 1),
@@ -208,7 +218,8 @@ impl App for View {
                     .enumerate()
                 {
                     let row = Self::row(i);
-                    canvas.card(row);
+                    let pressed = canvas.control_pressed(row, false);
+                    canvas.panel(row, 22, 2, if pressed { 220 } else { 255 });
                     canvas.text(
                         Rect::new(row.x + 24, row.y + 15, row.w - 48, 65),
                         &deck.name,
@@ -231,7 +242,7 @@ impl App for View {
                         BODY,
                     );
                 }
-                self.draw_pager(canvas, self.library.decks.len());
+                self.draw_pager(canvas, self.library.decks.len().div_ceil(PAGE_SIZE));
                 canvas.button(NEW, "New deck", true, false);
                 canvas.button(IMPORT, "Import Anki deck", false, false);
             }
@@ -270,7 +281,7 @@ impl App for View {
                         BODY.lines(3),
                     );
                 }
-                self.draw_pager(canvas, self.files.len());
+                self.draw_pager(canvas, self.files.len().div_ceil(PAGE_SIZE));
             }
             Mode::Deck(index) => {
                 header(canvas, "Deck", "Back");
@@ -325,12 +336,18 @@ impl App for View {
                     &format!("{} · {} due", deck.name, deck.due(day()).count()),
                     CAPTION,
                 );
-                canvas.card(MAIN_TEXT);
-                canvas.text(
-                    MAIN_TEXT.inset(42),
-                    if flipped { &card.back } else { &card.front },
-                    TextStyle::new(57).bold().center().lines(8),
-                );
+                let pressed = !flipped && canvas.control_pressed(MAIN_TEXT, false);
+                canvas.panel(MAIN_TEXT, 22, 2, if pressed { 220 } else { 255 });
+                let rect = MAIN_TEXT.inset(42);
+                let face = if flipped { &card.back } else { &card.front };
+                let mut pages = self.review_pages.borrow_mut();
+                if pages.is_empty() {
+                    *pages = canvas.text_pages(rect, face, FACE_STYLE);
+                }
+                if let Some(range) = pages.get(self.page) {
+                    canvas.text(rect, face[range.clone()].trim_end(), FACE_STYLE);
+                }
+                self.draw_pager(canvas, pages.len());
                 if flipped {
                     for (i, label) in ["Again", "Hard", "Good", "Easy"].iter().enumerate() {
                         canvas.button(
@@ -371,6 +388,14 @@ impl App for View {
                 _ => self.go(Mode::Library),
             };
         }
+        if matches!(self.mode, Mode::Library | Mode::Import | Mode::Review(..)) {
+            if PREVIOUS.contains(x, y) {
+                return self.page(-1);
+            }
+            if NEXT.contains(x, y) {
+                return self.page(1);
+            }
+        }
         match self.mode {
             Mode::Library | Mode::Import => {
                 if self.mode == Mode::Library && NEW.contains(x, y) {
@@ -383,12 +408,6 @@ impl App for View {
                         return Change::Partial;
                     }
                     return self.go(Mode::Import);
-                }
-                if Rect::new(40, 1350, 280, 100).contains(x, y) {
-                    return self.page(-1);
-                }
-                if Rect::new(944, 1350, 280, 100).contains(x, y) {
-                    return self.page(1);
                 }
                 let Some(row) = (0..PAGE_SIZE).find(|&i| Self::row(i).contains(x, y)) else {
                     return Change::None;
