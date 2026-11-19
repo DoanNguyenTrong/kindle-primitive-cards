@@ -40,7 +40,9 @@ Copy the `cards` and `documents` folders from the local ARMHF package to your Ki
 
 ## Status
 
-Desktop simulation and local ARMHF package checks passed on the Mac. Oasis 3 hardware verification is pending.
+Desktop simulation and local ARMHF package checks passed on the Mac.
+On an ARMHF Kindle Oasis 3 running firmware 5.18.2, Cards showed the Anki import instructions, returned to the
+original deck library with Back, and exited to Launcher.
 [Device notes](docs/device-notes.md)
 
 ## Develop locally
