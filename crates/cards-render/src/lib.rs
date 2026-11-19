@@ -162,19 +162,22 @@ impl View {
         }
     }
 
-    fn list_files(&mut self) {
-        self.files = fs::read_dir(&self.documents)
-            .into_iter()
-            .flatten()
-            .flatten()
-            .filter(|entry| entry.file_type().is_ok_and(|kind| kind.is_file()))
-            .map(|entry| entry.path())
-            .filter(|path| {
-                path.extension()
-                    .is_some_and(|ext| ext.eq_ignore_ascii_case("apkg"))
-            })
-            .collect();
+    fn list_files(&mut self) -> io::Result<()> {
+        self.files = primitive_app::with_storage(|| {
+            Ok(fs::read_dir(&self.documents)
+                .into_iter()
+                .flatten()
+                .flatten()
+                .filter(|entry| entry.file_type().is_ok_and(|kind| kind.is_file()))
+                .map(|entry| entry.path())
+                .filter(|path| {
+                    path.extension()
+                        .is_some_and(|ext| ext.eq_ignore_ascii_case("apkg"))
+                })
+                .collect())
+        })?;
         self.files.sort_unstable();
+        Ok(())
     }
 
     fn draw_pager(&self, canvas: &mut Canvas, count: usize) {
@@ -375,7 +378,10 @@ impl App for View {
                     return self.go(Mode::NewDeck);
                 }
                 if self.mode == Mode::Library && IMPORT.contains(x, y) {
-                    self.list_files();
+                    if let Err(error) = self.list_files() {
+                        self.notice = format!("Could not open Documents. {error}");
+                        return Change::Partial;
+                    }
                     return self.go(Mode::Import);
                 }
                 if Rect::new(40, 1350, 280, 100).contains(x, y) {
@@ -407,7 +413,10 @@ impl App for View {
                         thread::Builder::new()
                             .name("import-cards".into())
                             .spawn(move || {
-                                let _ = tx.send(import_apkg(&file, &scratch));
+                                let decks = primitive_app::with_storage(|| {
+                                    import_apkg(&file, &scratch).map_err(io::Error::other)
+                                });
+                                let _ = tx.send(decks.map_err(|error| error.to_string()));
                             });
                     if let Err(error) = worker {
                         self.notice = format!("Could not start the import. {error}");
