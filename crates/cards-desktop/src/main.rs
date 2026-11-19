@@ -18,15 +18,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let fonts =
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../doannt-kindle-launcher/assets/fonts");
     let mut canvas = Canvas::new(WIDTH, HEIGHT, &font_paths(&fonts))?;
-    let library = Library {
-        decks: vec![Deck {
-            name: "Vietnamese greetings".into(),
-            cards: vec![
-                Card::new("Good morning".into(), "Chào buổi sáng".into()),
-                Card::new("See you later".into(), "Hẹn gặp lại".into()),
-            ],
-        }],
-    };
+    let mut library = Library::default();
+    library.decks.push(Deck {
+        name: "Vietnamese greetings".into(),
+        cards: vec![
+            Card::new("Good morning".into(), "Chào buổi sáng".into()),
+            Card::new("See you later".into(), "Hẹn gặp lại".into()),
+        ],
+    });
     let mut app = View::new(library, None, output.clone());
     write_png(
         &output.join("cards-decks.png"),
@@ -59,12 +58,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collect::<Vec<_>>()
         .join("\n");
     let back = format!("{back}\n{}", "W".repeat(220));
-    let library = Library {
-        decks: vec![Deck {
-            name: "Long card".into(),
-            cards: vec![Card::new(front, back)],
-        }],
-    };
+    let mut library = Library::default();
+    library.decks.push(Deck {
+        name: "Long card".into(),
+        cards: vec![Card::new(front, back)],
+    });
     let mut app = View::new(library, None, output.clone());
     app.input(Input::Tap(140.0, 280.0));
     app.input(Input::Tap(400.0, 1000.0));
@@ -85,5 +83,46 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         HEIGHT,
         &second_answer,
     )?;
+    let documents = output.join("test-documents");
+    fs::create_dir_all(&documents)?;
+    fs::write(
+        documents.join("Weather words.tsv"),
+        "Rain\tMưa\nCloud\tMây\nRain\tMưa\n",
+    )?;
+    let mut app = View::new(Library::default(), None, documents);
+    assert_eq!(app.input(Input::Tap(800.0, 1510.0)), Change::Full);
+    assert_eq!(app.input(Input::Tap(150.0, 280.0)), Change::Partial);
+    let start = std::time::Instant::now();
+    loop {
+        if app.tick(std::time::Instant::now()) == Change::Full {
+            break;
+        }
+        assert!(start.elapsed().as_secs() < 3);
+        std::thread::sleep(std::time::Duration::from_millis(5));
+    }
+    assert!(app.library.decks.is_empty());
+    write_png(
+        &output.join("cards-import-preview.png"),
+        WIDTH,
+        HEIGHT,
+        &frame(&app, &mut canvas, false),
+    )?;
+    assert_eq!(app.input(Input::Tap(240.0, 1320.0)), Change::Full);
+    assert_eq!(app.library.decks[0].cards.len(), 2);
+    assert_eq!(app.input(Input::Tap(240.0, 1290.0)), Change::Full);
+    assert_eq!(app.input(Input::Tap(400.0, 1080.0)), Change::Full);
+    write_png(
+        &output.join("cards-self-test.png"),
+        WIDTH,
+        HEIGHT,
+        &frame(&app, &mut canvas, true),
+    )?;
+    assert_eq!(app.input(Input::Tap(300.0, 1100.0)), Change::Full);
+    assert_eq!(app.input(Input::Tap(400.0, 1080.0)), Change::Full);
+    assert_eq!(app.input(Input::Tap(850.0, 1100.0)), Change::Full);
+    assert_eq!(app.library.self_test(0).unwrap().missed_count(), 1);
+    assert_eq!(app.library.decks[0].statistics(), (0, 0));
+    assert_eq!(app.input(Input::Tap(400.0, 1080.0)), Change::Full);
+    assert_eq!(app.library.self_test(0).unwrap().current(), Some(0));
     Ok(())
 }
