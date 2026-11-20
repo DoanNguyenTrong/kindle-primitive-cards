@@ -7,7 +7,7 @@
   "developer": { "name": "Primitive AI" },
   "categories": ["productivity"],
   "description": "Review due flashcards or try a short self-test, then retry missed cards without changing your review schedule. Create decks in Cards or import Anki and two-column text files from Documents.",
-  "repo": "https://github.com/DoanNguyenTrong/kindle-primitive-cards",
+  "repo": "https://github.com/PrimitiveOS/kindle-primitive-cards",
   "licence": "PolyForm-Noncommercial-1.0.0",
   "source": "hosted",
   "icon": "icon.png",
