@@ -2,16 +2,22 @@
 
 # Cards
 
-**Text flashcards with spaced repetition for Kindle e-readers.**
+**Flashcards and quick self-tests**
 
-[Install guide](INSTALL.md) · [Device notes](docs/device-notes.md) · [Changelog](CHANGELOG.md)
+[![Release](https://img.shields.io/github/v/release/PrimitiveOS/kindle-primitive-cards?label=release)](https://github.com/PrimitiveOS/kindle-primitive-cards/releases) [![Licence: PolyForm-Noncommercial-1.0.0](https://img.shields.io/badge/licence-PolyForm--Noncommercial--1.0.0-blue)](LICENSE) [![Store downloads](https://img.shields.io/badge/Store%20downloads-54-brightgreen)](https://primitiveos.github.io/kindle-primitive-catalog/v1/index.json)
+
+[**Download**](https://github.com/PrimitiveOS/kindle-primitive-cards/releases/latest) · [**Install guide**](INSTALL.md) · [**Changelog**](CHANGELOG.md)
 
 </div>
 
 ---
 
-Create decks and cards with the Kindle keyboard, review cards when they are due, or run a short self-test. Import
-text from Anki and two-column text decks or export your cards to Documents.
+Review due flashcards or try a short self-test, then retry missed cards without changing your review schedule. Create decks in Cards or import Anki and two-column text files from Documents.
+
+## Quick start
+
+After setting up PrimitiveOS, open **Store** from Primitive Launcher. Choose **Cards** under **Apps**,
+tap **Get**, and open it from the Launcher grid. The [install guide](INSTALL.md) also covers the standalone USB package.
 
 ## Screenshots
 
@@ -41,18 +47,6 @@ text from Anki and two-column text decks or export your cards to Documents.
   Cards skips a pair when both faces match a card in the file or library. Files are limited to 8 MB.
 - Export a deck as tab-separated UTF-8 text in Documents. The text file can be imported back into Cards.
 
-## Quick start
-
-After setting up PrimitiveOS, open **Store** from Primitive Launcher. Choose **Cards** under **Apps**,
-tap **Get**, and open it from the Launcher grid. The [install guide](INSTALL.md) also covers local USB testing.
-
-## Status
-
-Version 0.1.1 passed desktop simulation and local ARMHF package checks on the Mac.
-Version 0.1.0 was checked on an ARMHF Kindle Oasis 3 running firmware 5.18.2. Cards showed the Anki import instructions, returned to the
-original deck library with Back, and exited to Launcher.
-[Device notes](docs/device-notes.md)
-
 ## Develop locally
 
 Keep `doannt-kindle-tools` and `doannt-kindle-launcher` next to this checkout. The desktop command writes sample PNGs
@@ -62,6 +56,23 @@ to `build/previews`. The Kindle and desktop drivers share the same card state an
 cargo test --offline --locked --workspace
 cargo run --offline --locked -p cards-desktop -- build/previews
 ```
+
+## Status
+
+| Device | Status |
+|---|---|
+| Kindle Oasis 3 (1264 × 1680, firmware 5.18.2) | Tested on hardware |
+
+**Current version: 0.1.2.** Changes are in [CHANGELOG.md](CHANGELOG.md).
+
+## Downloads
+
+**54 downloads** from Store, as of 2026-11-21. Store shows the same count on the app page.
+The count is GitHub downloads of this app's release packages, from the [Store catalog](https://primitiveos.github.io/kindle-primitive-catalog/v1/index.json).
+
+## Documentation
+
+[Install guide](INSTALL.md) · [Changelog](CHANGELOG.md) · [Device notes](docs/device-notes.md)
 
 ## Licence
 
