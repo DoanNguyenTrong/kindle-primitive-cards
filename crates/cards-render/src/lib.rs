@@ -381,7 +381,7 @@ impl App for View {
     fn draw(&self, canvas: &mut Canvas) {
         match self.mode {
             Mode::Library => {
-                header(canvas, "Cards", "Done");
+                header(canvas, "Cards", "Exit");
                 for (i, deck) in self
                     .library
                     .decks
