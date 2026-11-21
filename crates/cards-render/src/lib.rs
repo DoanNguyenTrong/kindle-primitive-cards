@@ -209,16 +209,18 @@ impl View {
 
     fn draw_face(&self, canvas: &mut Canvas, card: &Card, flipped: bool, subtitle: &str) {
         canvas.text(Rect::new(40, 172, 1184, 57), subtitle, CAPTION);
+        // A tap on the face reverses it, as the kit's controls do.
         let pressed = !flipped && canvas.control_pressed(MAIN_TEXT, false);
-        canvas.panel(MAIN_TEXT, 22, 2, if pressed { 220 } else { 255 });
+        canvas.panel(MAIN_TEXT, 22, 2, if pressed { 0 } else { 255 });
+        let style = FACE_STYLE.ink(if pressed { 255 } else { 0 });
         let rect = MAIN_TEXT.inset(42);
         let face = if flipped { &card.back } else { &card.front };
         let mut pages = self.review_pages.borrow_mut();
         if pages.is_empty() {
-            *pages = canvas.text_pages(rect, face, FACE_STYLE);
+            *pages = canvas.text_pages(rect, face, style);
         }
         if let Some(range) = pages.get(self.page) {
-            canvas.text(rect, face[range.clone()].trim_end(), FACE_STYLE);
+            canvas.text(rect, face[range.clone()].trim_end(), style);
         }
         self.draw_pager(canvas, pages.len());
     }
@@ -391,12 +393,13 @@ impl App for View {
                     .enumerate()
                 {
                     let row = Self::row(i);
+                    // A tap reverses the row, as the kit's rows do.
                     let pressed = canvas.control_pressed(row, false);
-                    canvas.panel(row, 22, 2, if pressed { 220 } else { 255 });
+                    canvas.panel(row, 22, 2, if pressed { 0 } else { 255 });
                     canvas.text(
                         Rect::new(row.x + 24, row.y + 15, row.w - 48, 65),
                         &deck.name,
-                        TextStyle::new(45).bold(),
+                        TextStyle::new(45).bold().ink(if pressed { 255 } else { 0 }),
                     );
                     canvas.text(
                         Rect::new(row.x + 24, row.y + 75, row.w - 48, 55),
@@ -405,7 +408,7 @@ impl App for View {
                             deck.cards.len(),
                             deck.due(day()).count()
                         ),
-                        CAPTION,
+                        CAPTION.ink(if pressed { 170 } else { 85 }),
                     );
                 }
                 if self.library.decks.is_empty() {
