@@ -1,5 +1,9 @@
 # Changes
 
+## 0.1.3
+
+- The card face and the deck rows reverse black and white while tapped (they were light gray).
+
 ## 0.1.1
 
 - Run a self-test of up to ten cards per deck, resume it later, and retry missed answers without changing scheduled reviews.
